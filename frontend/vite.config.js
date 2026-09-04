@@ -10,11 +10,11 @@ export default defineConfig({
     proxy: {
       // Forward backend calls to Spring Boot during development.
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8081',
         changeOrigin: true,
       },
       '/health': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8081',
         changeOrigin: true,
       },
     },
