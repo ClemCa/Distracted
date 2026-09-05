@@ -1,6 +1,6 @@
 spring:
   config:
-    import: optional:file:.env
+    import: optional:file:.env[.properties]
   application:
     name: distracted
   datasource:
@@ -20,5 +20,5 @@ server:
   port: 8081
 
 clemsso:
-  client-id: ${CLEMSSO_CLIENT_ID:}
-  client-secret: ${CLEMSSO_CLIENT_SECRET:}
+  client-id: ${CLEMSSO_CLIENT_ID}
+  client-secret: ${CLEMSSO_CLIENT_SECRET}
