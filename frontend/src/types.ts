@@ -10,3 +10,9 @@ export type Task = {
     delayed: boolean,
     completedAt: Temporal.Instant | null,
 }
+export type ClemSsoUser = {
+  sub?: string
+  email?: string
+  name?: string
+  picture?: string
+}

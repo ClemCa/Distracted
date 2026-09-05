@@ -6,15 +6,15 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    port: 5173,
+    port: Number(process.env.VITE_PORT) || 5173,
     proxy: {
       // Forward backend calls to Spring Boot during development.
       '/api': {
-        target: 'http://localhost:8081',
+        target: process.env.VITE_API_TARGET || 'http://localhost:8081',
         changeOrigin: true,
       },
       '/health': {
-        target: 'http://localhost:8081',
+        target: process.env.VITE_API_TARGET || 'http://localhost:8081',
         changeOrigin: true,
       },
     },
