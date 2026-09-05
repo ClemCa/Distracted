@@ -3,6 +3,24 @@ import Selector from '../components/selector'
 import { Task } from '../types'
 import { Temporal } from '@js-temporal/polyfill';
 
+type TaskDTO = {
+    id: string
+    label: string
+    urgency: Task['urgency']
+    importance: Task['importance']
+    createdAt: string
+    updatedAt: string
+    delayed: boolean
+    completedAt: string | null
+}
+
+const toTask = (dto: TaskDTO): Task => ({
+    ...dto,
+    createdAt: Temporal.Instant.from(dto.createdAt),
+    updatedAt: Temporal.Instant.from(dto.updatedAt),
+    completedAt: dto.completedAt ? Temporal.Instant.from(dto.completedAt) : null,
+})
+
 
 export default function Feed({changePage}: {changePage: (page: string) => void}) {
     const [allTasks, setAllTasks] = useState<Task[]>([]);
@@ -14,9 +32,9 @@ export default function Feed({changePage}: {changePage: (page: string) => void})
     const IMPORTANCE_VALUES = { low: 0.34, medium: 0.67, high: 1 };
 
     useEffect(() => {
-        fetch('/tasks')
+        fetch('/api/tasks')
             .then((res) => res.json())
-            .then((data) => setAllTasks(data))
+            .then((data: TaskDTO[]) => setAllTasks(data.map(toTask)))
             .catch((err) => console.error('Error fetching tasks:', err))
     }, []);
 
@@ -25,15 +43,16 @@ export default function Feed({changePage}: {changePage: (page: string) => void})
         setCuts((prev) => ({ ...prev, [task.id]: (prev[task.id] || 1) * 0.8 }));
     };
     const notToday = (task: Task) => {
-        fetch(`/tasks/${task.id}/delay`, { method: 'POST' })
+        fetch(`/api/tasks/${task.id}/delay`, { method: 'POST' })
             .then((res) => {
                 if (!res.ok) {
                     throw new Error('Error updating task');
                 }
                 return res.json();
             })
-            .then((data) => {
-                setAllTasks((prev) => prev.map((t) => (t.id === task.id ? data : t)));
+            .then((data: TaskDTO) => {
+                const updated = toTask(data);
+                setAllTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
             })
             .catch((err) => console.error('Error updating task:', err));
     };
