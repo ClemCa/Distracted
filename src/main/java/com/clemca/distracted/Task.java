@@ -1,13 +1,18 @@
 package com.clemca.distracted;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -40,6 +45,12 @@ public class Task {
 
     private Instant completedAt;
 
+    private Integer progress;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @OrderColumn(name = "position")
+    private List<Subtask> subtasks = new ArrayList<>();
+
     protected Task() {
     }
 
@@ -52,6 +63,8 @@ public class Task {
         this.updatedAt = this.createdAt;
         this.delayed = false;
         this.completedAt = null;
+        this.progress = 0;
+        this.subtasks = new ArrayList<>();
     }
 
     public String getId() {
@@ -108,5 +121,21 @@ public class Task {
 
     public void setCompletedAt(Instant completedAt) {
         this.completedAt = completedAt;
+    }
+
+    public Integer getProgress() {
+        return progress;
+    }
+
+    public void setProgress(Integer progress) {
+        this.progress = progress;
+    }
+
+    public List<Subtask> getSubtasks() {
+        return subtasks;
+    }
+
+    public void setSubtasks(List<Subtask> subtasks) {
+        this.subtasks = subtasks;
     }
 }

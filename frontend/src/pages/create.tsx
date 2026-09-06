@@ -20,7 +20,7 @@ export default function Create({ goBack, onCreated }: Props) {
 
   return (
     <TaskForm
-      initial={{ label: '', urgency: 'medium', importance: 'medium' }}
+      initial={{ label: '', urgency: 'medium', importance: 'medium', subtasks: [] }}
       title="New task"
       submitLabel="Create task"
       submittingLabel="Creating…"

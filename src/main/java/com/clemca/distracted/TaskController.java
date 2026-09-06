@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -43,7 +44,11 @@ public class TaskController {
 
     @PostMapping
     public Task create(@RequestBody CreateTaskRequest request) {
-        return tasks.save(new Task(request.label(), request.urgency(), request.importance()));
+        Task task = new Task(request.label(), request.urgency(), request.importance());
+        if (request.subtasks() != null) {
+            task.setSubtasks(toSubtasks(request.subtasks()));
+        }
+        return tasks.save(task);
     }
 
     @PostMapping ("/{id}/update")
@@ -53,6 +58,9 @@ public class TaskController {
         task.setLabel(request.label());
         task.setUrgency(request.urgency());
         task.setImportance(request.importance());
+        if (request.subtasks() != null) {
+            task.setSubtasks(toSubtasks(request.subtasks()));
+        }
         task.setUpdatedAt(Instant.now());
         return tasks.save(task);
     }
@@ -63,6 +71,8 @@ public class TaskController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
         task.setCompletedAt(Instant.now());
         task.setUpdatedAt(Instant.now());
+        task.setProgress(100);
+        task.getSubtasks().forEach(s -> s.setDone(true));
         return tasks.save(task);
     }
 
@@ -73,5 +83,27 @@ public class TaskController {
         task.setDelayed(true);
         task.setUpdatedAt(Instant.now());
         return tasks.save(task);
+    }
+
+    @PostMapping("/{id}/focus")
+    public Task updateFocus(@PathVariable String id, @RequestBody FocusUpdateRequest request) {
+        Task task = tasks.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
+        if (request.progress() != null) {
+            task.setProgress(Math.max(0, Math.min(100, request.progress())));
+        }
+        if (request.subtasks() != null) {
+            task.setSubtasks(toSubtasks(request.subtasks()));
+        }
+        task.setUpdatedAt(Instant.now());
+        return tasks.save(task);
+    }
+
+    private List<Subtask> toSubtasks(List<SubtaskRequest> requests) {
+        List<Subtask> subtasks = new ArrayList<>();
+        for (SubtaskRequest s : requests) {
+            subtasks.add(new Subtask(s.text(), s.done()));
+        }
+        return subtasks;
     }
 }

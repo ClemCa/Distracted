@@ -8,6 +8,7 @@ type TaskDTO = {
   importance: Importance
   delayed: boolean
   completedAt: string | null
+  progress: number | null
 }
 
 const urgencyStyles: Record<Urgency, string> = {
@@ -36,11 +37,33 @@ const importanceActiveStyles: Record<Importance, string> = {
   low: 'border-neutral-400 bg-neutral-500/20 text-neutral-200',
 }
 
+const statusActiveStyles: Record<StatusFilter, string> = {
+  notStarted: 'border-neutral-400 bg-neutral-500/20 text-neutral-200',
+  started: 'border-sky-500 bg-sky-500/20 text-sky-300',
+  completed: 'border-emerald-500 bg-emerald-500/20 text-emerald-300',
+}
+
+const statusStyles: Record<StatusFilter, string> = {
+  notStarted: 'border-neutral-500/40 text-neutral-400',
+  started: 'border-sky-500/40 text-sky-400',
+  completed: 'border-emerald-500/40 text-emerald-400',
+}
+
 const inactiveStyle =
   'border-neutral-700 text-neutral-500 hover:border-neutral-500 hover:text-neutral-300'
 
 const urgencyValues: Urgency[] = ['urgent', 'high', 'medium', 'low']
 const importanceValues: Importance[] = ['high', 'medium', 'low']
+
+type StatusFilter = 'notStarted' | 'started' | 'completed'
+
+const statusValues: StatusFilter[] = ['notStarted', 'started', 'completed']
+
+const statusLabels: Record<StatusFilter, string> = {
+  notStarted: 'not started',
+  started: 'started',
+  completed: 'completed',
+}
 
 type Props = {
   changePage: (page: string) => void
@@ -54,6 +77,9 @@ export default function Manage({ changePage, goBack, onEdit }: Props) {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [urgencyFilter, setUrgencyFilter] = useState<Set<Urgency>>(new Set())
   const [importanceFilter, setImportanceFilter] = useState<Set<Importance>>(new Set())
+  const [statusFilter, setStatusFilter] = useState<Set<StatusFilter>>(
+    new Set<StatusFilter>(['notStarted', 'started']),
+  )
 
   useEffect(() => {
     fetch('/api/tasks')
@@ -92,21 +118,43 @@ export default function Manage({ changePage, goBack, onEdit }: Props) {
       return next
     })
 
+  const toggleStatus = (value: StatusFilter) =>
+    setStatusFilter((prev) => {
+      const next = new Set(prev)
+      if (next.has(value)) next.delete(value)
+      else next.add(value)
+      return next
+    })
+
+  const statusOf = (task: TaskDTO): StatusFilter =>
+    task.completedAt
+      ? 'completed'
+      : task.progress != null && task.progress > 0
+        ? 'started'
+        : 'notStarted'
+
   const clearFilters = () => {
     setUrgencyFilter(new Set())
     setImportanceFilter(new Set())
+    setStatusFilter(new Set<StatusFilter>(['notStarted', 'started']))
   }
 
   const filtered = tasks.filter((task) => {
     if (urgencyFilter.size > 0 && !urgencyFilter.has(task.urgency)) return false
     if (importanceFilter.size > 0 && !importanceFilter.has(task.importance)) return false
+    if (statusFilter.size > 0 && !statusFilter.has(statusOf(task))) return false
     return true
   })
 
-  const hasFilters = urgencyFilter.size > 0 || importanceFilter.size > 0
+  const defaultStatus = new Set<StatusFilter>(['notStarted', 'started'])
+  const isDefaultStatus =
+    statusFilter.size === defaultStatus.size &&
+    [...statusFilter].every((value) => defaultStatus.has(value))
+  const hasFilters =
+    urgencyFilter.size > 0 || importanceFilter.size > 0 || !isDefaultStatus
 
   return (
-    <div className="w-full max-w-2xl h-5/6 font-mono">
+    <div className="flex w-full max-w-2xl h-5/6 flex-col font-mono">
       <div className="mb-4 flex items-center justify-between border-b-2 border-neutral-700 pb-3">
         <button
           onClick={goBack}
@@ -160,6 +208,23 @@ export default function Manage({ changePage, goBack, onEdit }: Props) {
             </button>
           ))}
         </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="mr-1 text-[10px] uppercase tracking-[0.2em] text-neutral-500">
+            status
+          </span>
+          {statusValues.map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => toggleStatus(value)}
+              className={`border px-1.5 py-0.5 text-[10px] uppercase tracking-wide ${
+                statusFilter.has(value) ? statusActiveStyles[value] : inactiveStyle
+              }`}
+            >
+              {statusLabels[value]}
+            </button>
+          ))}
+        </div>
         {hasFilters && (
           <button
             type="button"
@@ -180,13 +245,14 @@ export default function Manage({ changePage, goBack, onEdit }: Props) {
             : 'No tasks match the selected filters.'}
         </p>
       ) : (
-        <ul className="flex flex-col gap-2 overflow-y-auto h-full">
+        <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
           {filtered.map((task) => {
             const status = task.completedAt
               ? { label: 'done', className: 'border-emerald-500/40 text-emerald-400' }
               : task.delayed
                 ? { label: 'later', className: 'border-amber-500/40 text-amber-400' }
                 : null
+            const taskStatus = statusOf(task)
             return (
               <li
                 key={task.id}
@@ -226,6 +292,20 @@ export default function Manage({ changePage, goBack, onEdit }: Props) {
                 >
                   {task.importance}
                 </button>
+                {task.progress != null && task.progress > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => toggleStatus(taskStatus)}
+                    title={`Progress: ${task.progress}% — toggle ${statusLabels[taskStatus]} filter`}
+                    className={`border px-1.5 py-0.5 text-[10px] uppercase tracking-wide hover:opacity-80 ${
+                      statusFilter.has(taskStatus)
+                        ? statusActiveStyles[taskStatus]
+                        : statusStyles[taskStatus]
+                    }`}
+                  >
+                    {task.progress}%
+                  </button>
+                )}
                 <button
                   onClick={() => onEdit(task.id)}
                   className="border border-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide text-neutral-300 hover:bg-neutral-800 hover:text-white"

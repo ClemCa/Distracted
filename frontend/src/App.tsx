@@ -3,6 +3,7 @@ import Feed from './pages/feed'
 import Create from './pages/create'
 import Manage from './pages/manage'
 import Edit from './pages/edit'
+import Focus from './pages/focus'
 import { ClemSsoUser } from './types'
 
 
@@ -10,6 +11,7 @@ function App() {
   const [status, setStatus] = useState('Checking…')
   const [pageStack, setPageStack] = useState<string[]>(['feed'])
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [focusId, setFocusId] = useState<string | null>(null)
   const [user, setUser] = useState<ClemSsoUser | null>(null)
   const [authChecked, setAuthChecked] = useState(false)
 
@@ -57,6 +59,22 @@ function App() {
     )
   }
 
+  if (currentPage === 'now' && focusId) {
+    return (
+      <Focus
+        taskId={focusId}
+        onDone={() => {
+          setFocusId(null)
+          goBack()
+        }}
+        onContinueLater={() => {
+          setFocusId(null)
+          goBack()
+        }}
+      />
+    )
+  }
+
   return (
     <div className="flex flex-col justify-center items-center w-full h-screen bg-neutral-950 text-white">
       <div className="absolute top-5 right-6 flex items-center gap-3">
@@ -76,7 +94,12 @@ function App() {
       <div className="flex flex-1 items-center justify-center w-full">
         {
           currentPage === 'feed' ? (
-            <Feed changePage={navigate} />
+            <Feed
+              onNow={(task) => {
+                setFocusId(task.id)
+                navigate('now')
+              }}
+            />
           ) : currentPage === 'create' ? (
             <Create goBack={goBack} onCreated={goBack} />
           ) : currentPage === 'manage' ? (

@@ -1,4 +1,6 @@
 package com.clemca.distracted;
 
-public record CreateTaskRequest(String label, Urgency urgency, Importance importance) {
+import java.util.List;
+
+public record CreateTaskRequest(String label, Urgency urgency, Importance importance, List<SubtaskRequest> subtasks) {
 }

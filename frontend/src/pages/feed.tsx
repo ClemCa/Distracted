@@ -12,6 +12,8 @@ type TaskDTO = {
     updatedAt: string
     delayed: boolean
     completedAt: string | null
+    progress: number | null
+    subtasks: { text: string; done: boolean }[]
 }
 
 const toTask = (dto: TaskDTO): Task => ({
@@ -22,7 +24,7 @@ const toTask = (dto: TaskDTO): Task => ({
 })
 
 
-export default function Feed({changePage}: {changePage: (page: string) => void}) {
+export default function Feed({onNow}: {onNow: (task: Task) => void}) {
     const [allTasks, setAllTasks] = useState<Task[]>([]);
     const [cuts, setCuts] = useState<{ [taskId: string]: number }>({});
     const urgencyWeight = 0.5;
@@ -79,7 +81,7 @@ export default function Feed({changePage}: {changePage: (page: string) => void})
     return (
         <div className="flex flex-col gap-4">
             <Selector
-                onNow={() => task && changePage('now')}
+                onNow={() => task && onNow(task)}
                 onLater={() => task && later(task)}
                 onNotToday={() => task && notToday(task)}
                 task={task}

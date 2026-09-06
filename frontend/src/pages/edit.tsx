@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import TaskForm, { type TaskValues } from '../components/task-form'
-import type { Importance, Urgency } from '../types'
+import type { Importance, Subtask, Urgency } from '../types'
 
 type TaskDTO = {
   id: string
   label: string
   urgency: Urgency
   importance: Importance
+  subtasks: Subtask[]
 }
 
 type Props = {
@@ -26,7 +27,12 @@ export default function Edit({ goBack, taskId, onSaved }: Props) {
         return res.json()
       })
       .then((data: TaskDTO) =>
-        setInitial({ label: data.label, urgency: data.urgency, importance: data.importance }),
+        setInitial({
+          label: data.label,
+          urgency: data.urgency,
+          importance: data.importance,
+          subtasks: data.subtasks ?? [],
+        }),
       )
       .catch((err: Error) => setError(`Could not load task: ${err.message}`))
   }, [taskId])
@@ -79,6 +85,7 @@ export default function Edit({ goBack, taskId, onSaved }: Props) {
       submittingLabel="Saving…"
       onBack={goBack}
       onSubmit={submit}
+      showChecklist
     />
   )
 }
