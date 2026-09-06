@@ -20,12 +20,21 @@ export default function Create({ goBack, onCreated }: Props) {
 
   return (
     <TaskForm
-      initial={{ label: '', urgency: 'medium', importance: 'medium', subtasks: [] }}
+      initial={{
+        label: '',
+        description: '',
+        urgency: 'medium',
+        importance: 'medium',
+        project: '',
+        dependencyIds: [],
+        subtasks: [],
+      }}
       title="New task"
       submitLabel="Create task"
       submittingLabel="Creating…"
       onBack={goBack}
       onSubmit={submit}
+      showChecklist
     />
   )
 }

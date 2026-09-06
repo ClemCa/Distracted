@@ -71,6 +71,10 @@ function App() {
           setFocusId(null)
           goBack()
         }}
+        onEdit={() => {
+          setEditingId(focusId)
+          navigate('edit')
+        }}
       />
     )
   }
@@ -136,9 +140,9 @@ function App() {
         </>
       )}
 
-      <p className="mb-4 text-lg text-neutral-700">
+      {/* <p className="mb-4 text-lg text-neutral-700">
         Backend health: <span className="font-semibold">{status}</span>
-      </p>
+      </p> */}
     </div>
   )
 }

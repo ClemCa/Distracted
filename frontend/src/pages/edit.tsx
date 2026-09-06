@@ -5,8 +5,11 @@ import type { Importance, Subtask, Urgency } from '../types'
 type TaskDTO = {
   id: string
   label: string
+  description: string | null
   urgency: Urgency
   importance: Importance
+  project: string | null
+  dependencies: string[]
   subtasks: Subtask[]
 }
 
@@ -29,8 +32,11 @@ export default function Edit({ goBack, taskId, onSaved }: Props) {
       .then((data: TaskDTO) =>
         setInitial({
           label: data.label,
+          description: data.description ?? '',
           urgency: data.urgency,
           importance: data.importance,
+          project: data.project ?? '',
+          dependencyIds: data.dependencies ?? [],
           subtasks: data.subtasks ?? [],
         }),
       )
@@ -77,6 +83,13 @@ export default function Edit({ goBack, taskId, onSaved }: Props) {
       })
       .then(() => onSaved())
 
+  const remove = () =>
+    fetch(`/api/tasks/${taskId}`, { method: 'DELETE' })
+      .then((res) => {
+        if (!res.ok) throw new Error(`Could not delete task: HTTP ${res.status}`)
+        goBack()
+      })
+
   return (
     <TaskForm
       initial={initial}
@@ -85,7 +98,9 @@ export default function Edit({ goBack, taskId, onSaved }: Props) {
       submittingLabel="Saving…"
       onBack={goBack}
       onSubmit={submit}
+      onDelete={remove}
       showChecklist
+      excludeId={taskId}
     />
   )
 }

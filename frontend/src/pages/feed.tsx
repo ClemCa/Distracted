@@ -6,13 +6,16 @@ import { Temporal } from '@js-temporal/polyfill';
 type TaskDTO = {
     id: string
     label: string
+    description: string | null
     urgency: Task['urgency']
     importance: Task['importance']
+    project: string | null
     createdAt: string
     updatedAt: string
     delayed: boolean
     completedAt: string | null
     progress: number | null
+    dependencies: string[]
     subtasks: { text: string; done: boolean }[]
 }
 
@@ -73,7 +76,15 @@ export default function Feed({onNow}: {onNow: (task: Task) => void}) {
         ) * (cuts[task.id] || 1);
     }
 
-    const sortedTasks = allTasks.filter((task) => !task.delayed || task.updatedAt).sort((a, b) => urgencyScore(b) - urgencyScore(a));
+    const completedIds = new Set(
+      allTasks.filter((task) => task.completedAt !== null).map((task) => task.id),
+    );
+    const availableTasks = allTasks.filter((task) =>
+      (task.dependencies ?? []).every((id) => completedIds.has(id)),
+    );
+    const sortedTasks = availableTasks
+      .filter((task) => !task.delayed || task.updatedAt)
+      .sort((a, b) => urgencyScore(b) - urgencyScore(a));
 
     const urgentCount = sortedTasks.filter((task) => task.urgency === 'urgent').length
     const task = sortedTasks[0]

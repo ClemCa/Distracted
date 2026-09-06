@@ -45,6 +45,11 @@ public class TaskController {
     @PostMapping
     public Task create(@RequestBody CreateTaskRequest request) {
         Task task = new Task(request.label(), request.urgency(), request.importance());
+        task.setDescription(request.description());
+        task.setProject(request.project());
+        if (request.dependencies() != null) {
+            task.setDependencies(request.dependencies());
+        }
         if (request.subtasks() != null) {
             task.setSubtasks(toSubtasks(request.subtasks()));
         }
@@ -58,6 +63,11 @@ public class TaskController {
         task.setLabel(request.label());
         task.setUrgency(request.urgency());
         task.setImportance(request.importance());
+        task.setDescription(request.description());
+        task.setProject(request.project());
+        if (request.dependencies() != null) {
+            task.setDependencies(request.dependencies());
+        }
         if (request.subtasks() != null) {
             task.setSubtasks(toSubtasks(request.subtasks()));
         }

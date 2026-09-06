@@ -11,13 +11,16 @@ export type Subtask = {
 export type Task = {
     id: string,
     label: string,
+    description: string | null,
     urgency: Urgency,
     importance: Importance,
+    project: string | null,
     createdAt: Temporal.Instant,
     updatedAt: Temporal.Instant,
     delayed: boolean,
     completedAt: Temporal.Instant | null,
     progress: number | null,
+    dependencies: string[],
     subtasks: Subtask[],
 }
 export type ClemSsoUser = {

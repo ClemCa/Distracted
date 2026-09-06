@@ -1,5 +1,6 @@
 package com.clemca.distracted;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -7,6 +8,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
@@ -46,6 +48,16 @@ public class Task {
     private Instant completedAt;
 
     private Integer progress;
+
+    @Column(length = 2000)
+    private String description;
+
+    private String project;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "task_dependencies", joinColumns = @JoinColumn(name = "task_id"))
+    @Column(name = "dependency_id")
+    private List<String> dependencies = new ArrayList<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
     @OrderColumn(name = "position")
@@ -129,6 +141,30 @@ public class Task {
 
     public void setProgress(Integer progress) {
         this.progress = progress;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getProject() {
+        return project;
+    }
+
+    public void setProject(String project) {
+        this.project = project;
+    }
+
+    public List<String> getDependencies() {
+        return dependencies;
+    }
+
+    public void setDependencies(List<String> dependencies) {
+        this.dependencies = dependencies;
     }
 
     public List<Subtask> getSubtasks() {

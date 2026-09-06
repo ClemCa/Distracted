@@ -128,8 +128,13 @@ export default function Selector({ onNow, onLater, onNotToday, task, urgentCount
             style={{ x, y, rotate }}
             className="relative grid size-92 cursor-grab select-none place-items-center rounded-2xl bg-white text-neutral-900 shadow-[0_16px_40px_-16px_rgba(0,0,0,0.4)] active:cursor-grabbing"
           >
-            <div className="flex w-full flex-col items-center gap-4 px-10 py-8 text-center">
+            <div className="flex w-full flex-col items-center gap-3 px-10 py-8 text-center">
               <h2 className="text-2xl font-bold leading-tight">{task.label}</h2>
+              {task.project && (
+                <span className="rounded-full border border-neutral-300 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-neutral-600">
+                  {task.project}
+                </span>
+              )}
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${urgencyStyles[task.urgency]}`}>
                   {task.urgency}
@@ -138,6 +143,11 @@ export default function Selector({ onNow, onLater, onNotToday, task, urgentCount
                   {task.importance} importance
                 </span>
               </div>
+              {task.description && (
+                <p className="line-clamp-3 max-w-full text-sm leading-snug text-neutral-600">
+                  {task.description}
+                </p>
+              )}
             </div>
             <motion.div style={{ opacity: nowOpacity, fontWeight: nowWeight }} className={`${stamp} left-4 top-4`}>
               Now

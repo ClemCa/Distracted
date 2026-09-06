@@ -3,6 +3,8 @@ import type { Importance, Subtask, Urgency } from '../types'
 
 type FocusTask = {
     label: string
+    description: string | null
+    project: string | null
     urgency: Urgency
     importance: Importance
     progress: number | null
@@ -13,6 +15,7 @@ type Props = {
     taskId: string
     onDone: () => void
     onContinueLater: () => void
+    onEdit?: () => void
 }
 
 const urgencyStyles: Record<Urgency, string> = {
@@ -28,7 +31,7 @@ const importanceStyles: Record<Importance, string> = {
     low: 'border-neutral-500/40 text-neutral-400',
 }
 
-export default function Focus({ taskId, onDone, onContinueLater }: Props) {
+export default function Focus({ taskId, onDone, onContinueLater, onEdit }: Props) {
     const [task, setTask] = useState<FocusTask | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [progress, setProgress] = useState(0)
@@ -140,8 +143,21 @@ export default function Focus({ taskId, onDone, onContinueLater }: Props) {
     return (
         <div className="flex h-screen w-full flex-col items-center justify-center bg-neutral-950 px-6 text-white">
             <h1 className="text-5xl font-bold absolute top-6">Distracted</h1>
+            {onEdit && (
+                <button
+                    onClick={onEdit}
+                    className="absolute top-6 right-6 rounded-lg border border-neutral-700 px-3 py-1.5 text-sm font-semibold text-neutral-300 hover:bg-neutral-800 hover:text-white"
+                >
+                    Edit
+                </button>
+            )}
             <div className="w-full max-w-xl">
                 <h1 className="mt-3 text-center text-4xl font-bold leading-tight">{task.label}</h1>
+                {task.project && (
+                    <p className="mt-2 text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">
+                        {task.project}
+                    </p>
+                )}
                 <div className="mt-4 flex items-center justify-center gap-2">
                     <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${urgencyStyles[task.urgency]}`}>
                         {task.urgency}
@@ -150,6 +166,11 @@ export default function Focus({ taskId, onDone, onContinueLater }: Props) {
                         {task.importance} importance
                     </span>
                 </div>
+                {task.description && (
+                    <p className="mt-4 whitespace-pre-wrap text-center text-sm leading-relaxed text-neutral-300">
+                        {task.description}
+                    </p>
+                )}
 
                 <section className="mt-10">
                     <div className="flex items-end justify-between">

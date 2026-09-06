@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import type { Importance, Urgency } from '../types'
+import ConfirmDialog from '../components/confirm-dialog'
 
 type TaskDTO = {
   id: string
   label: string
   urgency: Urgency
   importance: Importance
+  project: string | null
   delayed: boolean
   completedAt: string | null
   progress: number | null
@@ -75,6 +77,7 @@ export default function Manage({ changePage, goBack, onEdit }: Props) {
   const [tasks, setTasks] = useState<TaskDTO[]>([])
   const [error, setError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<TaskDTO | null>(null)
   const [urgencyFilter, setUrgencyFilter] = useState<Set<Urgency>>(new Set())
   const [importanceFilter, setImportanceFilter] = useState<Set<Importance>>(new Set())
   const [statusFilter, setStatusFilter] = useState<Set<StatusFilter>>(
@@ -261,6 +264,11 @@ export default function Manage({ changePage, goBack, onEdit }: Props) {
                 <span className="min-w-0 flex-1 truncate text-sm text-neutral-100">
                   {task.label}
                 </span>
+                {task.project && (
+                  <span className="border border-neutral-600 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-neutral-400">
+                    {task.project}
+                  </span>
+                )}
                 {status && (
                   <span
                     className={`border px-1.5 py-0.5 text-[10px] uppercase tracking-wide ${status.className}`}
@@ -313,7 +321,7 @@ export default function Manage({ changePage, goBack, onEdit }: Props) {
                   edit
                 </button>
                 <button
-                  onClick={() => del(task.id)}
+                  onClick={() => setPendingDelete(task)}
                   disabled={deletingId === task.id}
                   className="border border-rose-500/50 px-2 py-0.5 text-[10px] uppercase tracking-wide text-rose-400 hover:bg-rose-500/10 disabled:opacity-40"
                 >
@@ -323,6 +331,20 @@ export default function Manage({ changePage, goBack, onEdit }: Props) {
             )
           })}
         </ul>
+      )}
+
+      {pendingDelete && (
+        <ConfirmDialog
+          title="Delete task?"
+          message={`This permanently deletes “${pendingDelete.label}” and can't be undone.`}
+          confirmLabel="Delete"
+          busy={deletingId === pendingDelete.id}
+          onConfirm={() => {
+            del(pendingDelete.id)
+            setPendingDelete(null)
+          }}
+          onCancel={() => setPendingDelete(null)}
+        />
       )}
     </div>
   )
