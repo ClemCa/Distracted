@@ -53,6 +53,9 @@ public class TaskController {
         if (request.subtasks() != null) {
             task.setSubtasks(toSubtasks(request.subtasks()));
         }
+        if (request.status() != null) {
+            task.setStatus(request.status());
+        }
         return tasks.save(task);
     }
 
@@ -71,6 +74,9 @@ public class TaskController {
         if (request.subtasks() != null) {
             task.setSubtasks(toSubtasks(request.subtasks()));
         }
+        if (request.status() != null) {
+            task.setStatus(request.status());
+        }
         task.setUpdatedAt(Instant.now());
         return tasks.save(task);
     }
@@ -82,6 +88,7 @@ public class TaskController {
         task.setCompletedAt(Instant.now());
         task.setUpdatedAt(Instant.now());
         task.setProgress(100);
+        task.setStatus(DeferStatus.none);
         task.getSubtasks().forEach(s -> s.setDone(true));
         return tasks.save(task);
     }
@@ -90,7 +97,16 @@ public class TaskController {
     public Task delay(@PathVariable String id) {
         Task task = tasks.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
-        task.setDelayed(true);
+        task.setStatus(DeferStatus.notToday);
+        task.setUpdatedAt(Instant.now());
+        return tasks.save(task);
+    }
+
+    @PostMapping("/{id}/later")
+    public Task later(@PathVariable String id) {
+        Task task = tasks.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
+        task.setStatus(DeferStatus.later);
         task.setUpdatedAt(Instant.now());
         return tasks.save(task);
     }

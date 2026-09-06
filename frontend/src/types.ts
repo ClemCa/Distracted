@@ -8,6 +8,8 @@ export type Subtask = {
     done: boolean
 }
 
+export type DeferStatus = "none" | "later" | "notToday"
+
 export type Task = {
     id: string,
     label: string,
@@ -17,7 +19,7 @@ export type Task = {
     project: string | null,
     createdAt: Temporal.Instant,
     updatedAt: Temporal.Instant,
-    delayed: boolean,
+    status: DeferStatus,
     completedAt: Temporal.Instant | null,
     progress: number | null,
     dependencies: string[],

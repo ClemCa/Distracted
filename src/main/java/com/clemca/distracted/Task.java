@@ -42,8 +42,9 @@ public class Task {
     @Column(nullable = false)
     private Instant updatedAt;
 
-    @Column(nullable = false)
-    private boolean delayed;
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private DeferStatus status;
 
     private Instant completedAt;
 
@@ -73,7 +74,7 @@ public class Task {
         this.importance = importance;
         this.createdAt = Instant.now();
         this.updatedAt = this.createdAt;
-        this.delayed = false;
+        this.status = DeferStatus.none;
         this.completedAt = null;
         this.progress = 0;
         this.subtasks = new ArrayList<>();
@@ -119,12 +120,12 @@ public class Task {
         this.updatedAt = updatedAt;
     }
 
-    public boolean isDelayed() {
-        return delayed;
+    public DeferStatus getStatus() {
+        return status == null ? DeferStatus.none : status;
     }
 
-    public void setDelayed(boolean delayed) {
-        this.delayed = delayed;
+    public void setStatus(DeferStatus status) {
+        this.status = status;
     }
 
     public Instant getCompletedAt() {

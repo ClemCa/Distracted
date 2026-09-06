@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { Importance, Urgency } from '../types'
+import type { DeferStatus, Importance, Urgency } from '../types'
 import ConfirmDialog from '../components/confirm-dialog'
 
 type TaskDTO = {
@@ -8,7 +8,7 @@ type TaskDTO = {
   urgency: Urgency
   importance: Importance
   project: string | null
-  delayed: boolean
+  status: DeferStatus
   completedAt: string | null
   progress: number | null
 }
@@ -54,6 +54,9 @@ const statusStyles: Record<StatusFilter, string> = {
 const inactiveStyle =
   'border-neutral-700 text-neutral-500 hover:border-neutral-500 hover:text-neutral-300'
 
+const projectActiveStyle = 'border-cyan-500 bg-cyan-500/20 text-cyan-300'
+const projectStyle = 'border-cyan-500/40 text-cyan-400'
+
 const urgencyValues: Urgency[] = ['urgent', 'high', 'medium', 'low']
 const importanceValues: Importance[] = ['high', 'medium', 'low']
 
@@ -65,6 +68,28 @@ const statusLabels: Record<StatusFilter, string> = {
   notStarted: 'not started',
   started: 'started',
   completed: 'completed',
+}
+
+type DeferFilter = DeferStatus
+
+const deferValues: DeferFilter[] = ['none', 'later', 'notToday']
+
+const deferLabels: Record<DeferFilter, string> = {
+  none: 'none',
+  later: 'later',
+  notToday: 'not today',
+}
+
+const deferActiveStyles: Record<DeferFilter, string> = {
+  none: 'border-neutral-400 bg-neutral-500/20 text-neutral-200',
+  later: 'border-amber-500 bg-amber-500/20 text-amber-300',
+  notToday: 'border-rose-500 bg-rose-500/20 text-rose-300',
+}
+
+const deferStyles: Record<DeferFilter, string> = {
+  none: 'border-neutral-500/40 text-neutral-400',
+  later: 'border-amber-500/40 text-amber-400',
+  notToday: 'border-rose-500/40 text-rose-400',
 }
 
 type Props = {
@@ -83,6 +108,9 @@ export default function Manage({ changePage, goBack, onEdit }: Props) {
   const [statusFilter, setStatusFilter] = useState<Set<StatusFilter>>(
     new Set<StatusFilter>(['notStarted', 'started']),
   )
+  const [projectFilter, setProjectFilter] = useState<Set<string>>(new Set())
+  const [deferFilter, setDeferFilter] = useState<Set<DeferFilter>>(new Set())
+  const [projects, setProjects] = useState<string[]>([])
 
   useEffect(() => {
     fetch('/api/tasks')
@@ -92,6 +120,13 @@ export default function Manage({ changePage, goBack, onEdit }: Props) {
       })
       .then((data: TaskDTO[]) => setTasks(data))
       .catch((err: Error) => setError(`Could not load tasks: ${err.message}`))
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/projects')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: string[]) => setProjects(data))
+      .catch(() => setProjects([]))
   }, [])
 
   const del = (id: string) => {
@@ -129,6 +164,22 @@ export default function Manage({ changePage, goBack, onEdit }: Props) {
       return next
     })
 
+  const toggleProject = (value: string) =>
+    setProjectFilter((prev) => {
+      const next = new Set(prev)
+      if (next.has(value)) next.delete(value)
+      else next.add(value)
+      return next
+    })
+
+  const toggleDefer = (value: DeferFilter) =>
+    setDeferFilter((prev) => {
+      const next = new Set(prev)
+      if (next.has(value)) next.delete(value)
+      else next.add(value)
+      return next
+    })
+
   const statusOf = (task: TaskDTO): StatusFilter =>
     task.completedAt
       ? 'completed'
@@ -140,12 +191,19 @@ export default function Manage({ changePage, goBack, onEdit }: Props) {
     setUrgencyFilter(new Set())
     setImportanceFilter(new Set())
     setStatusFilter(new Set<StatusFilter>(['notStarted', 'started']))
+    setProjectFilter(new Set())
+    setDeferFilter(new Set())
   }
+
+  const projectOf = (task: TaskDTO) => task.project ?? ''
+  const deferOf = (task: TaskDTO) => task.status ?? 'none'
 
   const filtered = tasks.filter((task) => {
     if (urgencyFilter.size > 0 && !urgencyFilter.has(task.urgency)) return false
     if (importanceFilter.size > 0 && !importanceFilter.has(task.importance)) return false
     if (statusFilter.size > 0 && !statusFilter.has(statusOf(task))) return false
+    if (projectFilter.size > 0 && !projectFilter.has(projectOf(task))) return false
+    if (deferFilter.size > 0 && !deferFilter.has(deferOf(task))) return false
     return true
   })
 
@@ -154,7 +212,11 @@ export default function Manage({ changePage, goBack, onEdit }: Props) {
     statusFilter.size === defaultStatus.size &&
     [...statusFilter].every((value) => defaultStatus.has(value))
   const hasFilters =
-    urgencyFilter.size > 0 || importanceFilter.size > 0 || !isDefaultStatus
+    urgencyFilter.size > 0 ||
+    importanceFilter.size > 0 ||
+    projectFilter.size > 0 ||
+    deferFilter.size > 0 ||
+    !isDefaultStatus
 
   return (
     <div className="flex w-full max-w-2xl h-5/6 flex-col font-mono">
@@ -228,6 +290,49 @@ export default function Manage({ changePage, goBack, onEdit }: Props) {
             </button>
           ))}
         </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="mr-1 text-[10px] uppercase tracking-[0.2em] text-neutral-500">
+            project
+          </span>
+          <button
+            type="button"
+            onClick={() => toggleProject('')}
+            className={`border px-1.5 py-0.5 text-[10px] uppercase tracking-wide ${
+              projectFilter.has('') ? projectActiveStyle : inactiveStyle
+            }`}
+          >
+            none
+          </button>
+          {projects.map((project) => (
+            <button
+              key={project}
+              type="button"
+              onClick={() => toggleProject(project)}
+              className={`border px-1.5 py-0.5 text-[10px] uppercase tracking-wide ${
+                projectFilter.has(project) ? projectActiveStyle : inactiveStyle
+              }`}
+            >
+              {project}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="mr-1 text-[10px] uppercase tracking-[0.2em] text-neutral-500">
+            defer
+          </span>
+          {deferValues.map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => toggleDefer(value)}
+              className={`border px-1.5 py-0.5 text-[10px] uppercase tracking-wide ${
+                deferFilter.has(value) ? deferActiveStyles[value] : deferStyles[value]
+              }`}
+            >
+              {deferLabels[value]}
+            </button>
+          ))}
+        </div>
         {hasFilters && (
           <button
             type="button"
@@ -251,10 +356,30 @@ export default function Manage({ changePage, goBack, onEdit }: Props) {
         <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
           {filtered.map((task) => {
             const status = task.completedAt
-              ? { label: 'done', className: 'border-emerald-500/40 text-emerald-400' }
-              : task.delayed
-                ? { label: 'later', className: 'border-amber-500/40 text-amber-400' }
-                : null
+              ? {
+                  label: 'done',
+                  toggle: () => toggleStatus('completed'),
+                  active: statusFilter.has('completed'),
+                  className: 'border-emerald-500/40 text-emerald-400',
+                  activeClassName: 'border-emerald-500 bg-emerald-500/20 text-emerald-300',
+                }
+              : task.status === 'notToday'
+                ? {
+                    label: 'not today',
+                    toggle: () => toggleDefer('notToday'),
+                    active: deferFilter.has('notToday'),
+                    className: 'border-rose-500/40 text-rose-400',
+                    activeClassName: 'border-rose-500 bg-rose-500/20 text-rose-300',
+                  }
+                : task.status === 'later'
+                  ? {
+                      label: 'later',
+                      toggle: () => toggleDefer('later'),
+                      active: deferFilter.has('later'),
+                      className: 'border-amber-500/40 text-amber-400',
+                      activeClassName: 'border-amber-500 bg-amber-500/20 text-amber-300',
+                    }
+                  : null
             const taskStatus = statusOf(task)
             return (
               <li
@@ -265,16 +390,30 @@ export default function Manage({ changePage, goBack, onEdit }: Props) {
                   {task.label}
                 </span>
                 {task.project && (
-                  <span className="border border-neutral-600 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-neutral-400">
+                  <button
+                    type="button"
+                    onClick={() => toggleProject(projectOf(task))}
+                    title={`Filter by project: ${task.project}`}
+                    className={`border px-1.5 py-0.5 text-[10px] uppercase tracking-wide hover:opacity-80 ${
+                      projectFilter.has(projectOf(task))
+                        ? projectActiveStyle
+                        : projectStyle
+                    }`}
+                  >
                     {task.project}
-                  </span>
+                  </button>
                 )}
                 {status && (
-                  <span
-                    className={`border px-1.5 py-0.5 text-[10px] uppercase tracking-wide ${status.className}`}
+                  <button
+                    type="button"
+                    onClick={status.toggle}
+                    title={`Filter by status: ${status.label}`}
+                    className={`border px-1.5 py-0.5 text-[10px] uppercase tracking-wide hover:opacity-80 ${
+                      status.active ? status.activeClassName : status.className
+                    }`}
                   >
                     {status.label}
-                  </span>
+                  </button>
                 )}
                 <button
                   type="button"

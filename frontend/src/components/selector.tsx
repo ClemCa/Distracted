@@ -55,7 +55,11 @@ export default function Selector({ onNow, onLater, onNotToday, task, urgentCount
     Promise.all([
       animate(x, dx, { duration: 0.3, ease: 'easeIn' }),
       animate(y, dy, { duration: 0.3, ease: 'easeIn' }),
-    ]).then(() => onDone?.())
+    ]).then(() => {
+      onDone?.()
+      setFlying(false)
+      settle()
+    })
   }
 
   const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {

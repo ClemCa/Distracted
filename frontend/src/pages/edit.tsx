@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import TaskForm, { type TaskValues } from '../components/task-form'
-import type { Importance, Subtask, Urgency } from '../types'
+import type { DeferStatus, Importance, Subtask, Urgency } from '../types'
 
 type TaskDTO = {
   id: string
@@ -9,6 +9,7 @@ type TaskDTO = {
   urgency: Urgency
   importance: Importance
   project: string | null
+  status: DeferStatus
   dependencies: string[]
   subtasks: Subtask[]
 }
@@ -36,6 +37,7 @@ export default function Edit({ goBack, taskId, onSaved }: Props) {
           urgency: data.urgency,
           importance: data.importance,
           project: data.project ?? '',
+          status: data.status ?? 'none',
           dependencyIds: data.dependencies ?? [],
           subtasks: data.subtasks ?? [],
         }),
@@ -75,7 +77,16 @@ export default function Edit({ goBack, taskId, onSaved }: Props) {
     fetch(`/api/tasks/${taskId}/update`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(values),
+      body: JSON.stringify({
+        label: values.label,
+        description: values.description,
+        urgency: values.urgency,
+        importance: values.importance,
+        project: values.project,
+        status: values.status,
+        dependencies: values.dependencyIds,
+        subtasks: values.subtasks,
+      }),
     })
       .then((res) => {
         if (!res.ok) throw new Error(`Could not update task: HTTP ${res.status}`)

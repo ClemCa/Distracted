@@ -9,5 +9,6 @@ public record CreateTaskRequest(
         Importance importance,
         String project,
         List<String> dependencies,
-        List<SubtaskRequest> subtasks) {
+        List<SubtaskRequest> subtasks,
+        DeferStatus status) {
 }

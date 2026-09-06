@@ -12,7 +12,7 @@ type TaskDTO = {
     project: string | null
     createdAt: string
     updatedAt: string
-    delayed: boolean
+    status: Task['status']
     completedAt: string | null
     progress: number | null
     dependencies: string[]
@@ -29,7 +29,6 @@ const toTask = (dto: TaskDTO): Task => ({
 
 export default function Feed({onNow}: {onNow: (task: Task) => void}) {
     const [allTasks, setAllTasks] = useState<Task[]>([]);
-    const [cuts, setCuts] = useState<{ [taskId: string]: number }>({});
     const urgencyWeight = 0.5;
     const importanceWeight = 0.25;
     const createdAtWeight = 0.25;
@@ -44,8 +43,18 @@ export default function Feed({onNow}: {onNow: (task: Task) => void}) {
     }, []);
 
     const later = (task: Task) => {
-        // cut the score by 20% only for now
-        setCuts((prev) => ({ ...prev, [task.id]: (prev[task.id] || 1) * 0.8 }));
+        fetch(`/api/tasks/${task.id}/later`, { method: 'POST' })
+            .then((res) => {
+                if (!res.ok) {
+                    throw new Error('Error updating task');
+                }
+                return res.json();
+            })
+            .then((data: TaskDTO) => {
+                const updated = toTask(data);
+                setAllTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+            })
+            .catch((err) => console.error('Error updating task:', err));
     };
     const notToday = (task: Task) => {
         fetch(`/api/tasks/${task.id}/delay`, { method: 'POST' })
@@ -73,7 +82,7 @@ export default function Feed({onNow}: {onNow: (task: Task) => void}) {
             urgencyWeight * urgency +
             importanceWeight * importance +
             createdAtWeight * recency
-        ) * (cuts[task.id] || 1);
+        ) * (task.status === 'later' ? 0.8 : 1);
     }
 
     const completedIds = new Set(
@@ -83,7 +92,7 @@ export default function Feed({onNow}: {onNow: (task: Task) => void}) {
       (task.dependencies ?? []).every((id) => completedIds.has(id)),
     );
     const sortedTasks = availableTasks
-      .filter((task) => !task.delayed || task.updatedAt)
+      .filter((task) => task.status !== 'notToday')
       .sort((a, b) => urgencyScore(b) - urgencyScore(a));
 
     const urgentCount = sortedTasks.filter((task) => task.urgency === 'urgent').length

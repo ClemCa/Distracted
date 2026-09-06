@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { SubmitEvent } from 'react'
-import type { Importance, Subtask, Urgency } from '../types'
+import type { DeferStatus, Importance, Subtask, Urgency } from '../types'
 import ProjectSelector from './project-selector'
 import DependencySelector from './dependency-selector'
 import ConfirmDialog from './confirm-dialog'
@@ -11,6 +11,7 @@ export type TaskValues = {
   urgency: Urgency
   importance: Importance
   project: string
+  status: DeferStatus
   dependencyIds: string[]
   subtasks: Subtask[]
 }
@@ -26,6 +27,12 @@ const importanceOptions: { value: Importance; label: string; selected: string }[
   { value: 'high', label: 'High', selected: 'border-violet-500 bg-violet-500/10 text-violet-300' },
   { value: 'medium', label: 'Medium', selected: 'border-sky-500 bg-sky-500/10 text-sky-300' },
   { value: 'low', label: 'Low', selected: 'border-neutral-500 bg-neutral-500/10 text-neutral-200' },
+]
+
+const deferOptions: { value: DeferStatus; label: string; selected: string }[] = [
+  { value: 'none', label: 'No status', selected: 'border-neutral-400 bg-neutral-500/10 text-neutral-200' },
+  { value: 'later', label: 'Later', selected: 'border-amber-500 bg-amber-500/10 text-amber-300' },
+  { value: 'notToday', label: 'Not today', selected: 'border-rose-500 bg-rose-500/10 text-rose-300' },
 ]
 
 type Props = {
@@ -55,6 +62,7 @@ export default function TaskForm({
   const [description, setDescription] = useState(initial.description ?? '')
   const [urgency, setUrgency] = useState<Urgency>(initial.urgency)
   const [importance, setImportance] = useState<Importance>(initial.importance)
+  const [status, setStatus] = useState<DeferStatus>(initial.status ?? 'none')
   const [project, setProject] = useState(initial.project ?? '')
   const [dependencyIds, setDependencyIds] = useState<string[]>(initial.dependencyIds ?? [])
   const [subtasks, setSubtasks] = useState<Subtask[]>(initial.subtasks ?? [])
@@ -107,6 +115,7 @@ export default function TaskForm({
       urgency,
       importance,
       project: project.trim(),
+      status,
       dependencyIds,
       subtasks,
     }).catch((err: Error) => {
@@ -242,6 +251,28 @@ export default function TaskForm({
             <p className="text-xs text-neutral-600">
               This task stays out of the feed until every dependency is completed.
             </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">
+            When
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {deferOptions.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setStatus(option.value)}
+                className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
+                  status === option.value
+                    ? option.selected
+                    : 'border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-200'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
         </div>
 

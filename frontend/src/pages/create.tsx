@@ -10,7 +10,16 @@ export default function Create({ goBack, onCreated }: Props) {
     fetch('/api/tasks', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(values),
+      body: JSON.stringify({
+        label: values.label,
+        description: values.description,
+        urgency: values.urgency,
+        importance: values.importance,
+        project: values.project,
+        status: values.status,
+        dependencies: values.dependencyIds,
+        subtasks: values.subtasks,
+      }),
     })
       .then((res) => {
         if (!res.ok) throw new Error(`Could not create task: HTTP ${res.status}`)
@@ -26,6 +35,7 @@ export default function Create({ goBack, onCreated }: Props) {
         urgency: 'medium',
         importance: 'medium',
         project: '',
+        status: 'none',
         dependencyIds: [],
         subtasks: [],
       }}
