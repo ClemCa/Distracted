@@ -29,7 +29,8 @@ export default function Selector({ onNow, onLater, onNotToday, task, urgentCount
   const isLocked = !task
 
   useEffect(() => {
-    if (!isLocked) settle() // reset position when task changes
+    setFlying(false) // re-enable dragging for the next task
+    settle() // reset position when task changes
   }, [task?.id, isLocked]);
 
   const x = useMotionValue(0)

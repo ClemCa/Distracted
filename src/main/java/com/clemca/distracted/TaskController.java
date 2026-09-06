@@ -1,6 +1,7 @@
 package com.clemca.distracted;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,6 +26,19 @@ public class TaskController {
     @GetMapping
     public List<Task> list() {
         return tasks.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public Task get(@PathVariable String id) {
+        return tasks.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
+    }
+
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable String id) {
+        Task task = tasks.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
+        tasks.delete(task);
     }
 
     @PostMapping

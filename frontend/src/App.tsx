@@ -1,13 +1,21 @@
 import { useEffect, useState } from 'react'
 import Feed from './pages/feed'
+import Create from './pages/create'
+import Manage from './pages/manage'
+import Edit from './pages/edit'
 import { ClemSsoUser } from './types'
 
 
 function App() {
   const [status, setStatus] = useState('Checking…')
-  const [currentPage, setCurrentPage] = useState('feed')
+  const [pageStack, setPageStack] = useState<string[]>(['feed'])
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [user, setUser] = useState<ClemSsoUser | null>(null)
   const [authChecked, setAuthChecked] = useState(false)
+
+  const currentPage = pageStack[pageStack.length - 1]
+  const navigate = (page: string) => setPageStack((prev) => [...prev, page])
+  const goBack = () => setPageStack((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev))
 
   useEffect(() => {
     fetch('/health')
@@ -68,10 +76,42 @@ function App() {
       <div className="flex flex-1 items-center justify-center w-full">
         {
           currentPage === 'feed' ? (
-            <Feed changePage={setCurrentPage} />
+            <Feed changePage={navigate} />
+          ) : currentPage === 'create' ? (
+            <Create goBack={goBack} onCreated={goBack} />
+          ) : currentPage === 'manage' ? (
+            <Manage
+              changePage={navigate}
+              goBack={goBack}
+              onEdit={(id) => {
+                setEditingId(id)
+                navigate('edit')
+              }}
+            />
+          ) : currentPage === 'edit' && editingId ? (
+            <Edit
+              goBack={goBack}
+              taskId={editingId}
+              onSaved={goBack}
+            />
           ) : "TODO"
         }
       </div>
+
+      {currentPage === 'feed' && (
+        <>
+        <button
+          onClick={() => navigate('create')}
+          className="absolute top-24 rounded-sm border border-neutral-700 bg-neutral-900 w-30 pb-2 pt-1 text-sm font-semibold text-neutral-300 hover:bg-neutral-800 hover:text-white">
+          New task
+        </button>
+        <button
+          onClick={() => navigate('manage')}
+          className="absolute top-34 rounded-sm border border-neutral-700 bg-neutral-900 w-30 pb-2 pt-1 text-sm font-semibold text-neutral-300 hover:bg-neutral-800 hover:text-white">
+          Manage tasks
+        </button>
+        </>
+      )}
 
       <p className="mb-4 text-lg text-neutral-700">
         Backend health: <span className="font-semibold">{status}</span>
