@@ -27,9 +27,10 @@ public class AuthController {
     }
 
     private String buildRedirectUri(HttpServletRequest request) {
-        String scheme = request.getScheme();
+        boolean forceHttps = "true".equalsIgnoreCase(System.getenv("FORCE_HTTPS"));
+        String scheme = forceHttps ? "https" : request.getScheme();
         String serverName = request.getServerName();
-        int serverPort = request.getServerPort();
+        int serverPort = forceHttps ? 443 : request.getServerPort();
         String path = request.getContextPath() + "/api/auth/callback";
         if ((scheme.equals("http") && serverPort == 80) || (scheme.equals("https") && serverPort == 443)) {
             return scheme + "://" + serverName + path;
